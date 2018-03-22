@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fetch">
+
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/fetch</robotNamespace>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+  <!-- Robot Chassis Link -->
+  <gazebo reference="chassis">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!-- Lower Mount Link -->
+  <gazebo reference="lower_mount">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!-- Mount Hinge Link -->
+  <gazebo reference="mount_hinge">
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+  <!-- Upper Mount Link -->
+  <gazebo reference="upper_mount">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!-- Camera Box Link -->
+  <gazebo reference="camera_box">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!-- Front Left Wheel Link -->
+  <gazebo reference="front_left_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- Front Right Wheel Link -->
+  <gazebo reference="front_right_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- Rear Left Wheel Link -->
+  <gazebo reference="rear_left_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- Rear Right Wheel Link -->
+  <gazebo reference="rear_right_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- Left Arm -->
+  <!-- Left Socket -->
+  <gazebo reference="left_socket">
+    <material>Gazebo/Red</material>
+  </gazebo>
+  <!-- Left Gripper -->
+  <gazebo reference="left_gripper">
+    <material>Gazebo/White</material>
+  </gazebo>
+  <!-- Left Extension -->
+  <!-- <gazebo reference="left_extension">
+    <material>Gazebo/White</material>
+  </gazebo> -->
+  <!-- Left Wrist -->
+  <gazebo reference="left_wrist">
+    <material>Gazebo/Red</material>
+  </gazebo>
+  <!-- Left Hand -->
+  <gazebo reference="left_hand">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!-- Right Arm -->
+  <!-- Right Socket -->
+  <gazebo reference="right_socket">
+    <material>Gazebo/Red</material>
+  </gazebo>
+  <!-- Right Gripper -->
+  <gazebo reference="right_gripper">
+    <material>Gazebo/White</material>
+  </gazebo>
+  <!-- Right Extension -->
+  <!-- <gazebo reference="right_extension">
+    <material>Gazebo/White</material>
+  </gazebo> -->
+  <!-- Right Wrist -->
+  <gazebo reference="right_wrist">
+    <material>Gazebo/Red</material>
+  </gazebo>
+  <!-- Right Hand -->
+  <gazebo reference="right_hand">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <!-- Camera -->
+  <gazebo reference="camera">
+    <material>Gazebo/Blue</material>
+    <sensor type="camera" name="camera1">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise is sampled independently per pixel on each frame.
+               That pixel's noise value is added to each of its color
+               channels, which at that point lie in the range [0,1]. -->
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>fetch/camera1</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link_optical</frameName>
+        <hackBaseline>0.0</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+        <CxPrime>0</CxPrime>
+        <Cx>0.0</Cx>
+        <Cy>0.0</Cy>
+        <focalLength>0.0</focalLength>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Differential Drive Controller -->
+  <gazebo>
+      <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>0.0</updateRate>
+          <leftJoint>front_left_wheel_joint</leftJoint>
+          <rightJoint>front_right_wheel_joint</rightJoint>
+          <wheelSeparation>0.55</wheelSeparation>
+          <wheelDiameter>0.15</wheelDiameter>
+          <torque>20</torque>
+          <commandTopic>cmd_vel</commandTopic>
+          <odometryTopic>odom</odometryTopic>
+          <odometryFrame>odom</odometryFrame>
+          <robotBaseFrame>chassis</robotBaseFrame>
+
+          <legacyMode>false</legacyMode>
+      </plugin>
+  </gazebo>
+
+</robot>

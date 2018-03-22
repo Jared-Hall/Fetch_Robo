@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fetch">
+
+  <!-- Extra files to be included -->
+  <xacro:include filename="$(find fetch_description)/urdf/fetch.rvizmats.xacro" />
+  <xacro:include filename="$(find fetch_description)/urdf/fetch.macros.xacro" />
+  <xacro:include filename="$(find fetch_description)/urdf/fetch.gazebo.xacro" />
+
+  <link name="base_link" />
+
+  <link name="chassis">
+    <visual>
+      <xacro:create_box_geometry length="0.5" width="0.5" height="0.1" />
+      <material name="white" />
+    </visual>
+    <collision>
+      <xacro:create_box_geometry length="0.5" width="0.5" height="0.1" />
+    </collision>
+    <xacro:create_box_inertial length="0.5" width="0.5" height="0.1" />
+  </link>
+
+  <joint name="chassis_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="chassis" />
+    <origin xyz="0 0 0.1" rpy="0 0 0" />
+  </joint>
+
+  <!-- <link name="ballast">
+    <visual>
+      <xacro:create_box_geometry length="0.1" width="0.3" height="0.1" />
+      <material name="white" />
+    </visual>
+    <collision>
+      <xacro:create_box_geometry length="0.1" width="0.3" height="0.1" />
+    </collision>
+    <xacro:create_box_inertial length="0.2" width="1.0" height="0.2" />
+  </link>
+
+  <joint name="attach_ballast" type="fixed">
+    <parent link="chassis" />
+    <child link="ballast" />
+    <origin xyz="-0.15 0 0.1" rpy="0 0 0" />
+  </joint> -->
+
+  <link name="lower_mount">
+    <visual>
+      <xacro:create_box_geometry length="0.1" width="0.1" height="0.25" />
+      <material name="white" />
+    </visual>
+    <collision>
+      <xacro:create_box_geometry length="0.1" width="0.1" height="0.25" />
+    </collision>
+    <xacro:create_box_inertial length="0.1" width="0.1" height="0.25" />
+  </link>
+
+  <joint name="mount_swivel" type="fixed">
+    <parent link="chassis" />
+    <child link="lower_mount" />
+    <origin xyz="0 0 0.15" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <link name="upper_mount">
+    <visual>
+      <xacro:create_box_geometry length="0.1" width="0.1" height="0.25" />
+      <material name="white" />
+    </visual>
+    <collision>
+      <xacro:create_box_geometry length="0.1" width="0.1" height="0.25" />
+    </collision>
+    <xacro:create_box_inertial length="0.1" width="0.1" height="0.25" />
+  </link>
+
+  <joint name="upper_mount_to_hinge" type="fixed">
+    <parent link="lower_mount" />
+    <child link="upper_mount" />
+    <origin xyz="0 0 0.125" rpy="0 0 0" />
+  </joint>
+
+  <link name="camera_box">
+    <visual>
+      <xacro:create_box_geometry length="0.3" width="0.3" height="0.3" />
+      <material name="white" />
+    </visual>
+    <collision>
+      <xacro:create_box_geometry length="0.3" width="0.3" height="0.3" />
+    </collision>
+    <xacro:create_box_inertial length="0.3" width="0.3" height="0.3" />
+  </link>
+
+  <joint name="camera_to_mount" type="fixed">
+    <parent link="upper_mount" />
+    <child link="camera_box" />
+    <origin xyz="0 0 0.275" rpy="0 0 0" />
+  </joint>
+
+  <link name="camera">
+    <visual>
+      <xacro:create_box_geometry length="0.05" width="0.1" height="0.1" />
+      <material name="blue" />
+    </visual>
+    <collision>
+      <xacro:create_box_geometry length="0.05" width="0.1" height="0.1" />
+    </collision>
+    <xacro:create_box_inertial length="0.05" width="0.1" height="0.1" />
+  </link>
+
+  <joint name="attach_camera" type="fixed">
+    <parent link="camera_box" />
+    <child link="camera" />
+    <origin xyz="0.15 0 0" rpy="0 0 0" />
+  </joint>
+
+  <!-- Create all 4 wheels -->
+  <xacro:create_wheel reflect_lr="1" reflect_fr="1" wheel_id="front_left" parent_name="chassis" />
+  <xacro:create_wheel reflect_lr="1" reflect_fr="-1" wheel_id="rear_left" parent_name="chassis" />
+  <xacro:create_wheel reflect_lr="-1" reflect_fr="1" wheel_id="front_right" parent_name="chassis" />
+  <xacro:create_wheel reflect_lr="-1" reflect_fr="-1" wheel_id="rear_right" parent_name="chassis" />
+
+  <!-- Create both arms -->
+  <xacro:create_arm reflect_lr="1" arm_id="left" parent_name="camera_box" />
+  <xacro:create_arm reflect_lr="-1" arm_id="right" parent_name="camera_box" />
+
+</robot>

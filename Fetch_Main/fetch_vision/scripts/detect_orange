@@ -1,0 +1,83 @@
+#! /usr/bin/env python
+
+from __future__ import print_function
+from __future__ import division
+
+import rospy
+import cv2
+from cv_bridge import CvBridge
+import numpy as np
+from sensor_msgs.msg import Image
+from std_msgs.msg import String
+
+image_converter = CvBridge()
+
+g_orange_left_frac = 0
+g_orange_right_frac = 0
+
+ORANGE_BGR_UPPER = np.array((42, 165, 255), dtype="uint8")
+ORANGE_BGR_LOWER = np.array((0, 25, 100), dtype="uint8")
+
+def camera_callback(ros_image):
+    """Detect the color orange.
+
+    rosmsg show sensor_msgs/Image
+    std_msgs/Header header
+        uint32 seq
+        time stamp
+        string frame_id
+    uint32 height
+    uint32 width
+    string encoding
+    uint8 is_bigendian
+    uint32 step
+    uint8[] data
+
+    For /fetch/camera1/image_raw
+    height          = 480
+    width           = 640
+    encoding
+    is_bigendian
+    step
+    data
+    """
+    # rospy.loginfo('Image is {} by {}'.format(gz_image.width, gz_image.height))
+
+    cv_image = image_converter.imgmsg_to_cv2(ros_image, "bgr8")
+    orange_mask = cv2.inRange(cv_image, ORANGE_BGR_LOWER, ORANGE_BGR_UPPER)
+    #orange_image = cv2.bitwise_and(cv_image, cv_image, mask=orange_mask)
+
+    global g_orange_left_frac
+    orange_left = orange_mask[:, 0:orange_mask.shape[1]//2]
+    orange_left_count = cv2.countNonZero(orange_left)
+    g_orange_left_frac = orange_left_count / orange_left.size
+
+    global g_orange_right_frac
+    orange_right = orange_mask[:, orange_mask.shape[1]//2:]
+    orange_right_count = cv2.countNonZero(orange_right)
+    g_orange_right_frac = orange_right_count / orange_right.size
+    #print(g_orange_left_frac, g_orange_right_frac)
+
+    # cv2.imshow('orange', np.hstack([cv_image, orange_image]))
+    # cv2.waitKey(1)
+
+def orange_detector():
+    rospy.init_node('orange_detector', anonymous=True)
+    rospy.Subscriber('/fetch/camera1/image_raw', Image, camera_callback)
+
+def run_orange_publisher():
+    global g_orange_left_frac
+    global g_orange_right_frac
+    orange_publisher = rospy.Publisher('/fetch/orange_frac', String, queue_size=1)
+    rate = rospy.Rate(10)
+    while not rospy.is_shutdown():
+        orange_fracs = '{} {}'.format(g_orange_left_frac, g_orange_right_frac)
+        orange_publisher.publish(orange_fracs)
+        rate.sleep()
+
+if __name__ == "__main__":
+    orange_detector()
+    try:
+        run_orange_publisher()
+    except rospy.ROSInterruptException:
+        pass

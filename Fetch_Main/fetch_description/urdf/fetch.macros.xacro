@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fetch">
+
+  <!-- Create box geometry -->
+  <xacro:macro name="create_box_geometry" params="length width height">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <box size="${length} ${width} ${height}" />
+    </geometry>
+  </xacro:macro>
+
+  <!-- Macro for creating a cylinder inertial element -->
+  <xacro:macro name="create_box_inertial" params="length width height">
+    <xacro:property name="mass" value="${length*width*height}" />
+      <inertial>
+          <mass value="${mass}" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia
+              ixx="${(1/6)*mass*((length**2*width**2+length**2*height**2+height**2*width**2)/(length**2+width**2+height**2))}"
+              ixy="0"
+              ixz="0"
+              iyy="${(1/6)*mass*((length**2*width**2+length**2*height**2+height**2*width**2)/(length**2+width**2+height**2))}"
+              iyz="0"
+              izz="${(1/6)*mass*((length**2*width**2+length**2*height**2+height**2*width**2)/(length**2+width**2+height**2))}"
+              />
+      </inertial>
+  </xacro:macro>
+
+  <!-- Create cylinder geometry -->
+  <xacro:macro name="create_cylinder_geometry" params="radius length">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <cylinder radius="${radius}" length="${length}" />
+    </geometry>
+  </xacro:macro>
+
+  <!-- Create cylinder interia matrix -->
+  <xacro:macro name="create_cylinder_inertial" params="radius length">
+    <xacro:property name="mass" value="${pi*radius**2*length}" />
+      <inertial>
+          <mass value="${mass}" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia
+              ixx="${(1/12)*mass*(3*radius**2 + length**2)}"
+              ixy="0"
+              ixz="0"
+              iyy="${(1/12)*mass*(3*radius**2 + length**2)}"
+              iyz="0"
+              izz="${(1/2)*mass*radius**2}"
+              />
+      </inertial>
+  </xacro:macro>
+
+  <!-- Create sphere geometry -->
+  <xacro:macro name="create_sphere_geometry" params="radius">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+      <sphere radius="${radius}" />
+    </geometry>
+  </xacro:macro>
+
+  <!-- Creating sphere inertia matrix -->
+  <xacro:macro name="create_sphere_inertial" params="radius">
+    <xacro:property name="mass" value="${(4/3)*pi*radius**3}" />
+      <inertial>
+          <mass value="${mass}" />
+          <inertia
+              ixx="${(2/5) * mass * radius * radius}"
+              ixy="0"
+              ixz="0"
+              iyy="${(2/5) * mass * radius * radius}"
+              iyz="0"
+              izz="${(2/5) * mass * radius * radius}"
+              />
+      </inertial>
+  </xacro:macro>
+
+  <!-- Macro for creating wheels -->
+  <xacro:macro name="create_wheel" params="reflect_lr reflect_fr wheel_id parent_name">
+    <xacro:property name="wheel_name" value="${wheel_id}_wheel" />
+
+    <link name="${wheel_name}">
+      <visual>
+        <xacro:create_cylinder_geometry radius="0.075" length="0.05" />
+        <material name="black" />
+      </visual>
+      <collision>
+        <xacro:create_sphere_geometry radius="0.075" />
+      </collision>
+      <xacro:create_cylinder_inertial radius="0.075" length="0.05"/>
+    </link>
+
+    <joint name="${wheel_name}_joint" type="continuous">
+      <parent link="${parent_name}" />
+      <child link="${wheel_name}" />
+      <origin xyz="${0.15 * reflect_fr} ${0.275 * reflect_lr} 0" rpy="1.570795 0 3.14" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Macro for creating arms -->
+  <xacro:macro name="create_arm" params="reflect_lr arm_id parent_name">
+
+    <link name="${arm_id}_socket">
+      <visual>
+        <xacro:create_sphere_geometry radius="0.05" />
+        <material name="red" />
+      </visual>
+      <collision>
+        <xacro:create_sphere_geometry radius="0.05" />
+      </collision>
+      <xacro:create_sphere_inertial radius="0.05" />
+    </link>
+
+    <joint name="${arm_id}_socket_to_box" type="revolute">
+      <parent link="${parent_name}" />
+      <child link="${arm_id}_socket" />
+      <limit effort="1000.0" lower="0" upper="3.14" velocity="0.5"/>
+      <origin xyz="0 ${0.175 * reflect_lr} 0" rpy="1.570795 1.570795 0" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${arm_id}_gripper">
+      <visual>
+        <xacro:create_cylinder_geometry radius="0.025" length="0.33" />
+        <material name="white" />
+      </visual>
+      <collision>
+        <xacro:create_cylinder_geometry radius="0.025" length="0.33" />
+      </collision>
+      <xacro:create_cylinder_inertial radius="0.025" length="0.33" />
+    </link>
+
+    <joint name="${arm_id}_gripper_to_socket" type="fixed">
+      <parent link="${arm_id}_socket" />
+      <child link="${arm_id}_gripper" />
+      <origin xyz="0.2 0 ${-0.01 * reflect_lr}" rpy="0 1.570795 0" />
+    </joint>
+
+    <link name="${arm_id}_wrist">
+      <visual>
+        <xacro:create_sphere_geometry radius="0.025" />
+        <material name="red" />
+      </visual>
+      <collision>
+        <xacro:create_sphere_geometry radius="0.025" />
+      </collision>
+      <xacro:create_sphere_inertial radius="0.025" />
+    </link>
+
+    <joint name="${arm_id}_wrist_to_gripper" type="revolute">
+      <parent link="${arm_id}_gripper" />
+      <child link="${arm_id}_wrist" />
+      <limit effort="1000.0" lower="1.570795" upper="1.570795" velocity="0.5"/>
+      <origin xyz="0 0 0.1667" rpy="0 0 ${1.570795 * reflect_lr}" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${arm_id}_hand">
+      <visual>
+        <xacro:create_box_geometry length="0.2" width="0.025" height="0.025" />
+        <material name="white" />
+      </visual>
+      <collision>
+        <xacro:create_box_geometry length="0.2" width="0.025" height="0.025" />
+      </collision>
+      <xacro:create_box_inertial length="0.2" width="0.025" height="0.025" />
+    </link>
+
+    <joint name="${arm_id}_hand_to_wrist" type="fixed">
+      <parent link="${arm_id}_wrist" />
+      <child link="${arm_id}_hand" />
+      <origin xyz="0 0 0.015" rpy="0 0 0" />
+    </joint>
+
+  </xacro:macro>
+
+</robot>
